@@ -1,36 +1,52 @@
 import React, { useState } from 'react';
-import { ChevronRight, Folder, GitBranch, Box, Settings, Users, DollarSign, Activity } from 'lucide-react';
+import { ChevronRight, Folder, GitBranch, Box, Building } from 'lucide-react';
 
-const DropdownMenu = ({ title, items, onSelect, onViewAll, icon: Icon }) => {
+const icons = {
+  Folder,
+  GitBranch,
+  Box,
+  Building
+};
+
+const SidebarItem = ({ item, onSelect, level = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const Icon = icons[item.icon] || Folder;
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    onSelect(item);
+    if (item.children) {
+      setIsOpen(!isOpen);
+    }
+  };
 
   return (
-    <div className="mb-2">
-      <div className="flex items-center">
-        <div
-          className="flex-grow flex items-center p-2 cursor-pointer hover:bg-gray-700"
-          onClick={() => onViewAll(title.toLowerCase())}
-        >
-          <Icon className="mr-2 h-4 w-4" />
-          <span>{title}</span>
-        </div>
-        <div
-          className="p-2 cursor-pointer hover:bg-gray-700"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-90' : ''}`} />
-        </div>
+    <div>
+      <div
+        className={`flex items-center p-2 cursor-pointer hover:bg-gray-700 ${
+          level > 0 ? 'pl-' + level * 4 : ''
+        }`}
+        onClick={handleClick}
+      >
+        <Icon className="mr-2 h-4 w-4" />
+        <span>{item.name}</span>
+        {item.children && item.children.length > 0 && (
+          <ChevronRight
+            className={`ml-auto h-4 w-4 transition-transform ${
+              isOpen ? 'transform rotate-90' : ''
+            }`}
+          />
+        )}
       </div>
-      {isOpen && (
-        <div className="pl-4">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="p-2 cursor-pointer hover:bg-gray-700"
-              onClick={() => onSelect(item)}
-            >
-              {item.name}
-            </div>
+      {isOpen && item.children && (
+        <div>
+          {item.children.map((child) => (
+            <SidebarItem
+              key={child.id}
+              item={child}
+              onSelect={onSelect}
+              level={level + 1}
+            />
           ))}
         </div>
       )}
@@ -38,87 +54,18 @@ const DropdownMenu = ({ title, items, onSelect, onViewAll, icon: Icon }) => {
   );
 };
 
-const ConfigMenu = ({ currentNode }) => {
-  const getConfigOptions = () => {
-    if (currentNode.tags.includes('organization')) {
-      return [
-        { name: 'Overview', icon: Activity },
-        { name: 'Members', icon: Users },
-        { name: 'Billing', icon: DollarSign },
-        { name: 'Settings', icon: Settings },
-      ];
-    } else if (currentNode.tags.includes('project')) {
-      return [
-        { name: 'Overview', icon: Activity },
-        { name: 'Members', icon: Users },
-        { name: 'Settings', icon: Settings },
-      ];
-    } else if (currentNode.tags.includes('repository')) {
-      return [
-        { name: 'Overview', icon: Activity },
-        { name: 'Branches', icon: GitBranch },
-        { name: 'Settings', icon: Settings },
-      ];
-    } else if (currentNode.tags.includes('application')) {
-      return [
-        { name: 'Overview', icon: Activity },
-        { name: 'Metrics', icon: Activity },
-        { name: 'Logs', icon: Activity },
-        { name: 'Settings', icon: Settings },
-      ];
-    }
-    return [];
+export const Sidebar = ({ tree, onSelect }) => {
+  const renderItems = (items) => {
+    return items.map((item) => (
+      <SidebarItem key={item.id} item={item} onSelect={onSelect} />
+    ));
   };
 
-  const options = getConfigOptions();
-
-  return (
-    <div className="mt-4">
-      <h3 className="text-sm uppercase mb-2 px-2">Configuration</h3>
-      {options.map((option, index) => (
-        <div key={index} className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
-          <option.icon className="mr-2 h-4 w-4" />
-          <span>{option.name}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export const Sidebar = ({ items, currentNode, onNavigate, onViewAll }) => {
   return (
     <div className="w-64 bg-gray-800 text-white h-full overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-xl font-bold mb-4">Dashboard</h2>
-        <DropdownMenu
-          title="Organizations"
-          items={items.organizations}
-          onSelect={onNavigate}
-          onViewAll={onViewAll}
-          icon={Folder}
-        />
-        <DropdownMenu
-          title="Projects"
-          items={items.projects}
-          onSelect={onNavigate}
-          onViewAll={onViewAll}
-          icon={Folder}
-        />
-        <DropdownMenu
-          title="Repositories"
-          items={items.repositories}
-          onSelect={onNavigate}
-          onViewAll={onViewAll}
-          icon={GitBranch}
-        />
-        <DropdownMenu
-          title="Applications"
-          items={items.applications}
-          onSelect={onNavigate}
-          onViewAll={onViewAll}
-          icon={Box}
-        />
-        {currentNode && <ConfigMenu currentNode={currentNode} />}
+        <h2 className="text-xl font-bold mb-4">{tree.name}</h2>
+        {renderItems(tree.children)}
       </div>
     </div>
   );
