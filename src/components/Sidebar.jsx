@@ -1,138 +1,125 @@
-import React from 'react';
-import { ChevronDown, User, Settings, Terminal, Database, Users, Globe, DollarSign, FileText, Activity, Folder, GitBranch, Box, Cloud } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
+import React, { useState } from 'react';
+import { ChevronRight, Folder, GitBranch, Box, Settings, Users, DollarSign, Activity } from 'lucide-react';
 
-const ProfileDropdown = ({ user, items, onSelect }) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center p-4 w-full hover:bg-gray-700 transition-colors duration-200">
-        <User className="mr-2 h-5 w-5" />
-        <span className="flex-grow text-left">{user.name}</span>
-        <ChevronDown className="ml-2 h-4 w-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 bg-gray-800 text-black">
-        <DropdownMenuItem className="hover:bg-gray-700">
-          <User className="mr-2 h-4 w-4" /> Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem className="hover:bg-gray-700">
-          <Settings className="mr-2 h-4 w-4" /> Account Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-gray-700" />
-        <DropdownMenuItem onSelect={() => onSelect({ type: 'orgs', item: null })} className="hover:bg-gray-700">
-          <Folder className="mr-2 h-4 w-4" /> Organizations
-        </DropdownMenuItem>
-        {items.orgs.map((org, index) => (
-          <DropdownMenuItem key={`org-${index}`} onSelect={() => onSelect({ type: 'org', item: org })} className="pl-8 hover:bg-gray-700">
-            {org.name}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator className="bg-gray-700" />
-        <DropdownMenuItem onSelect={() => onSelect({ type: 'projects', item: null })} className="hover:bg-gray-700">
-          <Folder className="mr-2 h-4 w-4" /> Projects
-        </DropdownMenuItem>
-        {items.projects.map((proj, index) => (
-          <DropdownMenuItem key={`proj-${index}`} onSelect={() => onSelect({ type: 'project', item: proj })} className="pl-8 hover:bg-gray-700">
-            {proj.name}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator className="bg-gray-700" />
-        <DropdownMenuItem onSelect={() => onSelect({ type: 'repos', item: null })} className="hover:bg-gray-700">
-          <GitBranch className="mr-2 h-4 w-4" /> Repositories
-        </DropdownMenuItem>
-        {items.repos.map((repo, index) => (
-          <DropdownMenuItem key={`repo-${index}`} onSelect={() => onSelect({ type: 'repo', item: repo })} className="pl-8 hover:bg-gray-700">
-            {repo.name}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator className="bg-gray-700" />
-        <DropdownMenuItem onSelect={() => onSelect({ type: 'apps', item: null })} className="hover:bg-gray-700">
-          <Box className="mr-2 h-4 w-4" /> Apps
-        </DropdownMenuItem>
-        {items.apps.map((app, index) => (
-          <DropdownMenuItem key={`app-${index}`} onSelect={() => onSelect({ type: 'app', item: app })} className="pl-8 hover:bg-gray-700">
-            {app.name}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator className="bg-gray-700" />
-        <DropdownMenuItem className="hover:bg-gray-700">Logout</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+const DropdownMenu = ({ title, items, onSelect, onViewAll, icon: Icon }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="mb-2">
+      <div className="flex items-center">
+        <div
+          className="flex-grow flex items-center p-2 cursor-pointer hover:bg-gray-700"
+          onClick={() => onViewAll(title.toLowerCase())}
+        >
+          <Icon className="mr-2 h-4 w-4" />
+          <span>{title}</span>
+        </div>
+        <div
+          className="p-2 cursor-pointer hover:bg-gray-700"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-90' : ''}`} />
+        </div>
+      </div>
+      {isOpen && (
+        <div className="pl-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="p-2 cursor-pointer hover:bg-gray-700"
+              onClick={() => onSelect(item)}
+            >
+              {item.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
-const SidebarContent = ({ view, setActiveWorkflow }) => {
-  const workflowItems = {
-    orgs: [
-      { name: 'All Organizations', icon: Folder },
-      { name: 'Add Organization', icon: Folder },
-      { name: 'Organization Settings', icon: Settings },
-    ],
-    org: [
-      { name: 'Overview', icon: Activity },
-      { name: 'Members', icon: Users },
-      { name: 'Billing', icon: DollarSign },
-      { name: 'Settings', icon: Settings },
-    ],
-    projects: [
-      { name: 'All Projects', icon: Folder },
-      { name: 'Add Project', icon: Folder },
-      { name: 'Project Settings', icon: Settings },
-    ],
-    project: [
-      { name: 'Overview', icon: Activity },
-      { name: 'Repositories', icon: GitBranch },
-      { name: 'Members', icon: Users },
-      { name: 'Environment', icon: Cloud },
-      { name: 'Settings', icon: Settings },
-    ],
-    repos: [
-      { name: 'All Repositories', icon: GitBranch },
-      { name: 'Add Repository', icon: GitBranch },
-      { name: 'Repository Settings', icon: Settings },
-    ],
-    repo: [
-      { name: 'Overview', icon: Activity },
-      { name: 'Code', icon: Terminal },
-      { name: 'Pull Requests', icon: GitBranch },
-      { name: 'Actions', icon: Activity },
-      { name: 'Settings', icon: Settings },
-    ],
-    apps: [
-      { name: 'All Apps', icon: Box },
-      { name: 'Add App', icon: Box },
-      { name: 'App Settings', icon: Settings },
-    ],
-    app: [
-      { name: 'Overview', icon: Activity },
-      { name: 'Logs', icon: FileText },
-      { name: 'Metrics', icon: Activity },
-      { name: 'Settings', icon: Settings },
-    ],
+};
+
+const ConfigMenu = ({ currentNode }) => {
+  const getConfigOptions = () => {
+    if (currentNode.tags.includes('organization')) {
+      return [
+        { name: 'Overview', icon: Activity },
+        { name: 'Members', icon: Users },
+        { name: 'Billing', icon: DollarSign },
+        { name: 'Settings', icon: Settings },
+      ];
+    } else if (currentNode.tags.includes('project')) {
+      return [
+        { name: 'Overview', icon: Activity },
+        { name: 'Members', icon: Users },
+        { name: 'Settings', icon: Settings },
+      ];
+    } else if (currentNode.tags.includes('repository')) {
+      return [
+        { name: 'Overview', icon: Activity },
+        { name: 'Branches', icon: GitBranch },
+        { name: 'Settings', icon: Settings },
+      ];
+    } else if (currentNode.tags.includes('application')) {
+      return [
+        { name: 'Overview', icon: Activity },
+        { name: 'Metrics', icon: Activity },
+        { name: 'Logs', icon: Activity },
+        { name: 'Settings', icon: Settings },
+      ];
+    }
+    return [];
   };
 
-  const items = workflowItems[view] || [];
+  const options = getConfigOptions();
 
   return (
     <div className="mt-4">
-      {items.map((item) => (
-        <div
-          key={item.name}
-          className="flex items-center p-3 cursor-pointer hover:bg-gray-700"
-          onClick={() => setActiveWorkflow(item.name.toLowerCase())}
-        >
-          <item.icon className="mr-2" />
-          {item.name}
+      <h3 className="text-sm uppercase mb-2 px-2">Configuration</h3>
+      {options.map((option, index) => (
+        <div key={index} className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+          <option.icon className="mr-2 h-4 w-4" />
+          <span>{option.name}</span>
         </div>
       ))}
     </div>
   );
 };
 
-
-export const Sidebar = ({ user, items, view, setActiveWorkflow, onSelect }) => (
-    <div className="w-64 bg-gray-800 text-white h-full flex flex-col">
-      <div className="sticky top-0 bg-gray-800 z-10 border-b border-gray-700">
-        <ProfileDropdown user={user} items={items} onSelect={onSelect} />
-      </div>
-      <div className="flex-1 overflow-y-auto">
-        <SidebarContent view={view} setActiveWorkflow={setActiveWorkflow} />
+export const Sidebar = ({ items, currentNode, onNavigate, onViewAll }) => {
+  return (
+    <div className="w-64 bg-gray-800 text-white h-full overflow-y-auto">
+      <div className="p-4">
+        <h2 className="text-xl font-bold mb-4">Dashboard</h2>
+        <DropdownMenu
+          title="Organizations"
+          items={items.organizations}
+          onSelect={onNavigate}
+          onViewAll={onViewAll}
+          icon={Folder}
+        />
+        <DropdownMenu
+          title="Projects"
+          items={items.projects}
+          onSelect={onNavigate}
+          onViewAll={onViewAll}
+          icon={Folder}
+        />
+        <DropdownMenu
+          title="Repositories"
+          items={items.repositories}
+          onSelect={onNavigate}
+          onViewAll={onViewAll}
+          icon={GitBranch}
+        />
+        <DropdownMenu
+          title="Applications"
+          items={items.applications}
+          onSelect={onNavigate}
+          onViewAll={onViewAll}
+          icon={Box}
+        />
+        {currentNode && <ConfigMenu currentNode={currentNode} />}
       </div>
     </div>
   );
+};

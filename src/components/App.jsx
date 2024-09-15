@@ -1,49 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { MainView } from './MainView';
-import { mockData, flattenData } from './mockData';
+import { mockFileSystem, flattenFileSystem } from '../utils/mockData';
 
 const App = () => {
-  const [view, setView] = useState('orgs');
-  const [activeWorkflow, setActiveWorkflow] = useState('all organizations');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [currentNode, setCurrentNode] = useState(null);
+  const [currentViewType, setCurrentViewType] = useState('organizations');
   const [flatItems, setFlatItems] = useState({
-    orgs: [],
+    organizations: [],
     projects: [],
-    repos: [],
-    apps: []
+    repositories: [],
+    applications: []
   });
 
   useEffect(() => {
-    setFlatItems(flattenData(mockData));
+    const flattened = flattenFileSystem(mockFileSystem);
+    setFlatItems(flattened);
+    // Set the initial currentNode to the first organization
+    if (flattened.organizations.length > 0) {
+      setCurrentNode(flattened.organizations[0]);
+    }
   }, []);
 
-  const handleSelect = ({ type, item }) => {
-    if (item) {
-      setSelectedItem(item);
-      setView(type);
-      setActiveWorkflow('overview');
-    } else {
-      setSelectedItem(null);
-      setView(type);
-      setActiveWorkflow(`all ${type}`);
-    }
+  const handleNavigate = (node) => {
+    setCurrentNode(node);
+    setCurrentViewType(node.tags[0]); // Assuming the first tag represents the node type
+  };
+
+  const handleViewAll = (viewType) => {
+    setCurrentViewType(viewType);
+    setCurrentNode(null); // Clear the current node when viewing all items of a type
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar
-        user={mockData.user}
         items={flatItems}
-        view={view}
-        setActiveWorkflow={setActiveWorkflow}
-        onSelect={handleSelect}
+        currentNode={currentNode}
+        onNavigate={handleNavigate}
+        onViewAll={handleViewAll}
       />
       <MainView
-        view={view}
-        selectedItem={selectedItem}
-        allItems={flatItems}
-        onSelect={handleSelect}
+        currentNode={currentNode}
+        currentViewType={currentViewType}
+        items={flatItems[currentViewType]}
+        onNavigate={handleNavigate}
       />
     </div>
   );
